@@ -857,7 +857,27 @@ def validate_vm_disk(namespace):
 
 def process_disk_or_snapshot_create_namespace(namespace):
     if namespace.source:
-        usage_error = 'usage error: --source {SNAPSHOT | DISK} | --source VHD_BLOB_URI [--source-storage-account-id ID]'
+        usage_error = 'usage error: --source VMIMAGE not found in location'
+        try:
+            urn = namespace.source.split(':')
+            if len(urn) == 4:
+                compute_client = _compute_client_factory()
+                version = urn[3]
+                if version.lower() == 'latest':
+                    versions = compute_client.virtual_machine_images.list(
+                            namespace.location, urn[0], urn[1], urn[2],
+                            top=1, order='name desc')
+                    if len(versions) != 1:
+                        raise CLIError(usage_error)
+                    version = versions[0].name
+                image = compute_client.virtual_machine_images.get(
+                        namespace.location, urn[0], urn[1], urn[2], version)
+                namespace.source_vmimage = image.id
+                return
+        except CloudError:
+            raise CLIError(usage_error)
+
+        usage_error = 'usage error: --source {SNAPSHOT | DISK | VMIMAGE} | --source VHD_BLOB_URI [--source-storage-account-id ID]'
         try:
             namespace.source_blob_uri, namespace.source_disk, namespace.source_snapshot = _figure_out_storage_source(namespace.resource_group_name, namespace.source)  # pylint: disable=line-too-long
             if not namespace.source_blob_uri and namespace.source_storage_account_id:

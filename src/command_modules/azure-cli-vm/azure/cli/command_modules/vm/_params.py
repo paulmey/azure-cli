@@ -295,6 +295,7 @@ for scope in ['disk', 'snapshot']:
                           help='source to create the disk/snapshot from, including unmanaged blob uri, managed disk id or name, or snapshot id or name')
     register_cli_argument(scope, 'source_blob_uri', ignore_type)
     register_cli_argument(scope, 'source_disk', ignore_type)
+    register_cli_argument(scope, 'source_vmimage', ignore_type)
     register_cli_argument(scope, 'source_snapshot', ignore_type)
     register_cli_argument(scope, 'source_storage_account_id', help='used when source blob is in a different subscription')
     register_cli_argument(scope, 'size_gb', options_list=('--size-gb', '-z'), help='size in GB.')

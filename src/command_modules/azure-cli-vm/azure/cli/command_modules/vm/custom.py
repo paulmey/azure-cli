@@ -293,21 +293,25 @@ def create_managed_disk(resource_group_name, disk_name, location=None,
                         size_gb=None, sku='Premium_LRS',
                         source=None,  # pylint: disable=unused-argument
                         # below are generated internally from 'source'
-                        source_blob_uri=None, source_disk=None, source_snapshot=None,
-                        source_storage_account_id=None, no_wait=False, tags=None):
-    Disk, CreationData, DiskCreateOption = get_sdk(ResourceType.MGMT_COMPUTE, 'Disk', 'CreationData',
-                                                   'DiskCreateOption', mod='models')
+                        source_blob_uri=None, source_disk=None, source_vmimage=None,
+                        source_snapshot=None, source_storage_account_id=None,
+                        no_wait=False, tags=None):
+    Disk, CreationData, DiskCreateOption, ImageDiskReference = get_sdk(
+            ResourceType.MGMT_COMPUTE, 'Disk', 'CreationData',
+            'DiskCreateOption', 'ImageDiskReference', mod='models')
 
     location = location or get_resource_group_location(resource_group_name)
     if source_blob_uri:
         option = DiskCreateOption.import_enum
+    elif source_vmimage:
+        option = DiskCreateOption.from_image
     elif source_disk or source_snapshot:
         option = DiskCreateOption.copy
     else:
         option = DiskCreateOption.empty
 
     creation_data = CreationData(option, source_uri=source_blob_uri,
-                                 image_reference=None,
+                                 image_reference=ImageDiskReference(source_vmimage) if source_vmimage else None,
                                  source_resource_id=source_disk or source_snapshot,
                                  storage_account_id=source_storage_account_id)
 
